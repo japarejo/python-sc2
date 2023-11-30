@@ -12,14 +12,10 @@ from sc2.units import Units
 class CyclonePush(BotAI):
 
     def select_target(self) -> Point2:
-        # Pick a random enemy structure's position
-        targets = self.enemy_structures
-        if targets:
+        if targets := self.enemy_structures:
             return targets.random.position
 
-        # Pick a random enemy unit's position
-        targets = self.enemy_units
-        if targets:
+        if targets := self.enemy_units:
             return targets.random.position
 
         # Pick enemy start location if it has no friendly units nearby
@@ -113,8 +109,7 @@ class CyclonePush(BotAI):
         # Saturate gas
         for refinery in self.gas_buildings:
             if refinery.assigned_harvesters < refinery.ideal_harvesters:
-                worker: Units = self.workers.closer_than(10, refinery)
-                if worker:
+                if worker := self.workers.closer_than(10, refinery):
                     worker.random.gather(refinery)
 
         for scv in self.workers.idle:

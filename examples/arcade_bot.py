@@ -50,10 +50,9 @@ class MarineSplitChallenge(BotAI):
 
                 # attack (or move towards) zerglings / banelings
                 if unit.weapon_cooldown <= self.client.game_step / 2:
-                    enemies_in_range = self.enemy_units.filter(unit.target_in_range)
-
-                    # attack lowest hp enemy if any enemy is in range
-                    if enemies_in_range:
+                    if enemies_in_range := self.enemy_units.filter(
+                        unit.target_in_range
+                    ):
                         # Use stimpack
                         if (
                             self.already_pending_upgrade(UpgradeId.STIMPACK) == 1
@@ -70,12 +69,10 @@ class MarineSplitChallenge(BotAI):
                         lowest_hp_enemy_in_range = min(filtered_enemies_in_range, key=lambda u: u.health)
                         unit.attack(lowest_hp_enemy_in_range)
 
-                    # no enemy is in attack-range, so give attack command to closest instead
                     else:
                         closest_enemy = self.enemy_units.closest_to(unit)
                         unit.attack(closest_enemy)
 
-                # move away from zergling / banelings
                 else:
                     stutter_step_positions = self.position_around_unit(unit, distance=4)
 

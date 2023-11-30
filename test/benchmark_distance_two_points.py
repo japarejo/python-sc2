@@ -38,9 +38,7 @@ def distance_to_math_hypot(s, p):
 
 def distance_scipy_euclidean(p1, p2) -> Union[int, float]:
     """ Distance calculation using scipy """
-    dist = scipydistance.euclidean(p1, p2)
-    # dist = distance.cdist(p1.T, p2.T, "euclidean")
-    return dist
+    return scipydistance.euclidean(p1, p2)
 
 
 def distance_numpy_linalg_norm(p1, p2):
@@ -106,9 +104,7 @@ correct_result = distance_to_math_hypot(p1, p2)
 
 
 def check_result(result1, result2, accuracy=1e-5):
-    if abs(result1 - result2) <= accuracy:
-        return True
-    return False
+    return abs(result1 - result2) <= accuracy
 
 
 if USING_PYTHON_3_8:

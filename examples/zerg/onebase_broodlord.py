@@ -88,8 +88,7 @@ class BroodlordBot(BotAI):
 
         # Upgrade to greater spire
         if self.townhalls(UnitTypeId.HIVE).ready:
-            spires: Units = self.structures(UnitTypeId.SPIRE).ready
-            if spires:
+            if spires := self.structures(UnitTypeId.SPIRE).ready:
                 spire: Unit = spires.random
                 if self.can_afford(UnitTypeId.GREATERSPIRE) and spire.is_idle:
                     spire.build(UnitTypeId.GREATERSPIRE)
@@ -111,8 +110,7 @@ class BroodlordBot(BotAI):
         # Saturate gas
         for extractor in self.gas_buildings:
             if extractor.assigned_harvesters < extractor.ideal_harvesters:
-                workers: Units = self.workers.closer_than(20, extractor)
-                if workers:
+                if workers := self.workers.closer_than(20, extractor):
                     workers.random.gather(extractor)
 
         # Build queen

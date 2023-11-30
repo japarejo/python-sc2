@@ -39,7 +39,7 @@ class Units(list):
         return self.of_type(unit_types)
 
     def __iter__(self) -> Generator[Unit]:
-        return (item for item in super().__iter__())
+        return iter(super().__iter__())
 
     # TODO Deprecate in favor of Units.__call__
     def select(self, units: Iterable[Unit]):
@@ -117,10 +117,7 @@ class Units(list):
         """
         :param tag:
         """
-        for unit in self:
-            if unit.tag == tag:
-                return unit
-        return None
+        return next((unit for unit in self if unit.tag == tag), None)
 
     def by_tag(self, tag: int) -> Unit:
         """
@@ -140,9 +137,7 @@ class Units(list):
         """
         :param n:
         """
-        if n >= self.amount:
-            return self
-        return self.subgroup(self[:n])
+        return self if n >= self.amount else self.subgroup(self[:n])
 
     @property
     def random(self) -> Unit:
@@ -156,9 +151,7 @@ class Units(list):
         """ Returns self if n >= self.amount. """
         if n < 1:
             return Units([], self._bot_object)
-        if n >= self.amount:
-            return self
-        return self.subgroup(random.sample(self, n))
+        return self if n >= self.amount else self.subgroup(random.sample(self, n))
 
     def in_attack_range_of(self, unit: Unit, bonus_distance: float = 0) -> Units:
         """Filters units that are in attack range of the given unit.
@@ -238,8 +231,10 @@ class Units(list):
         assert self, "Units object is empty"
         if isinstance(position, Unit):
             return min(
-                (unit1 for unit1 in self),
-                key=lambda unit2: self._bot_object._distance_squared_unit_to_unit(unit2, position),
+                self,
+                key=lambda unit2: self._bot_object._distance_squared_unit_to_unit(
+                    unit2, position
+                ),
             )
 
         distances = self._bot_object._distance_units_to_pos(self, position)
@@ -261,8 +256,10 @@ class Units(list):
         assert self, "Units object is empty"
         if isinstance(position, Unit):
             return max(
-                (unit1 for unit1 in self),
-                key=lambda unit2: self._bot_object._distance_squared_unit_to_unit(unit2, position),
+                self,
+                key=lambda unit2: self._bot_object._distance_squared_unit_to_unit(
+                    unit2, position
+                ),
             )
         distances = self._bot_object._distance_units_to_pos(self, position)
         return max(((unit, dist) for unit, dist in zip(self, distances)), key=lambda my_tuple: my_tuple[1])[0]

@@ -9,9 +9,9 @@ from sc2.paths import Paths
 
 def get(name: str) -> Map:
     # Iterate through 2 folder depths
-    for map_dir in (p for p in Paths.MAPS.iterdir()):
+    for map_dir in iter(Paths.MAPS.iterdir()):
         if map_dir.is_dir():
-            for map_file in (p for p in map_dir.iterdir()):
+            for map_file in iter(map_dir.iterdir()):
                 if Map.matches_target_map_name(map_file, name):
                     return Map(map_file)
         elif Map.matches_target_map_name(map_dir, name):

@@ -97,8 +97,7 @@ class RampWallBot(BotAI):
                 return
             # Choose any depot location
             target_depot_location: Point2 = depot_placement_positions.pop()
-            workers: Units = self.workers.gathering
-            if workers:  # if workers were found
+            if workers := self.workers.gathering:
                 worker: Unit = workers.random
                 worker.build(UnitTypeId.SUPPLYDEPOT, target_depot_location)
 

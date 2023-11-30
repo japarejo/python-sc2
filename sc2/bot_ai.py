@@ -168,9 +168,9 @@ class BotAI(BotAIInternal):
         ), "self._find_expansion_locations() has not been run yet, so accessing the list of expansion locations is pointless."
         expansion_locations: Dict[Point2, Units] = {pos: Units([], self) for pos in self._expansion_positions_list}
         for resource in self.resources:
-            # It may be that some resources are not mapped to an expansion location
-            exp_position: Point2 = self._resource_location_to_expansion_position_dict.get(resource.position, None)
-            if exp_position:
+            if exp_position := self._resource_location_to_expansion_position_dict.get(
+                resource.position, None
+            ):
                 assert exp_position in expansion_locations
                 expansion_locations[exp_position].append(resource)
         return expansion_locations
@@ -351,25 +351,19 @@ class BotAI(BotAIInternal):
                 # if current place is a gas extraction site, go there
                 if current_place.vespene_contents:
                     worker.gather(current_place)
-                # if current place is a gas extraction site,
-                # go to the mineral field that is near and has the most minerals left
                 else:
                     local_minerals = (
                         mineral for mineral in self.mineral_field if mineral.distance_to(current_place) <= 8
                     )
-                    # local_minerals can be empty if townhall is misplaced
-                    target_mineral = max(local_minerals, key=lambda mineral: mineral.mineral_contents, default=None)
-                    if target_mineral:
+                    if target_mineral := max(
+                        local_minerals,
+                        key=lambda mineral: mineral.mineral_contents,
+                        default=None,
+                    ):
                         worker.gather(target_mineral)
-            # more workers to distribute than free mining spots
-            # send to closest if worker is doing nothing
             elif worker.is_idle and all_minerals_near_base:
                 target_mineral = min(all_minerals_near_base, key=lambda mineral: mineral.distance_to(worker))
                 worker.gather(target_mineral)
-            else:
-                # there are no deficit mining places and worker is not idle
-                # so dont move him
-                pass
 
     @property_cache_once_per_frame
     def owned_expansions(self) -> Dict[Point2, Unit]:
@@ -587,18 +581,26 @@ class BotAI(BotAIInternal):
 
         :param pos:
         :param force:"""
-        workers = (
-            self.workers.filter(lambda w: (w.is_gathering or w.is_idle) and w.distance_to(pos) < 20) or self.workers
-        )
-        if workers:
-            for worker in workers.sorted_by_distance_to(pos).prefer_idle:
-                if (
-                    worker not in self.unit_tags_received_action and not worker.orders or len(worker.orders) == 1
-                    and worker.orders[0].ability.id in {AbilityId.MOVE, AbilityId.HARVEST_GATHER}
-                ):
-                    return worker
-
-            return workers.random if force else None
+        if workers := (
+            self.workers.filter(
+                lambda w: (w.is_gathering or w.is_idle) and w.distance_to(pos) < 20
+            )
+            or self.workers
+        ):
+            return next(
+                (
+                    worker
+                    for worker in workers.sorted_by_distance_to(pos).prefer_idle
+                    if (
+                        worker not in self.unit_tags_received_action
+                        and not worker.orders
+                        or len(worker.orders) == 1
+                        and worker.orders[0].ability.id
+                        in {AbilityId.MOVE, AbilityId.HARVEST_GATHER}
+                    )
+                ),
+                workers.random if force else None,
+            )
         return None
 
     async def can_place_single(self, building: Union[AbilityId, UnitTypeId], position: Point2) -> bool:
@@ -784,12 +786,15 @@ class BotAI(BotAIInternal):
         if structure_type_value not in self.game_data.units:
             return max((s.build_progress for s in self.structures if s._proto.unit_type in equiv_values), default=0)
         creation_ability: AbilityData = self.game_data.units[structure_type_value].creation_ability
-        max_value = max(
-            [s.build_progress for s in self.structures if s._proto.unit_type in equiv_values] +
-            [self._abilities_all_units[1].get(creation_ability, 0)],
+        return max(
+            [
+                s.build_progress
+                for s in self.structures
+                if s._proto.unit_type in equiv_values
+            ]
+            + [self._abilities_all_units[1].get(creation_ability, 0)],
             default=0,
         )
-        return max_value
 
     def tech_requirement_progress(self, structure_type: UnitTypeId) -> float:
         """Returns the tech requirement progress for a specific building
@@ -825,8 +830,12 @@ class BotAI(BotAIInternal):
         if not unit_info_id_value:  # Equivalent to "if unit_info_id_value == 0:"
             return 1
         progresses: List[float] = [self.structure_type_build_progress(unit_info_id_value)]
-        for equiv_structure in EQUIVALENTS_FOR_TECH_PROGRESS.get(unit_info_id, []):
-            progresses.append(self.structure_type_build_progress(equiv_structure.value))
+        progresses.extend(
+            self.structure_type_build_progress(equiv_structure.value)
+            for equiv_structure in EQUIVALENTS_FOR_TECH_PROGRESS.get(
+                unit_info_id, []
+            )
+        )
         return max(progresses)
 
     def already_pending(self, unit_type: Union[UpgradeId, UnitTypeId]) -> float:
@@ -1056,13 +1065,12 @@ class BotAI(BotAIInternal):
                             ignore_warning=True,
                         )
 
-                if successfully_trained:
-                    trained_amount += 1
-                    if trained_amount == amount:
-                        # Target unit train amount reached
-                        return trained_amount
-                else:
+                if not successfully_trained:
                     # Some error occured and we couldn't train the unit
+                    return trained_amount
+                trained_amount += 1
+                if trained_amount == amount:
+                    # Target unit train amount reached
                     return trained_amount
         return trained_amount
 

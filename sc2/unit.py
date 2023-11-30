@@ -238,8 +238,14 @@ class Unit:
     def ground_dps(self) -> float:
         """ Returns the dps against ground units. Does not include upgrades. """
         if self.can_attack_ground:
-            weapon = next((weapon for weapon in self._weapons if weapon.type in TARGET_GROUND), None)
-            if weapon:
+            if weapon := next(
+                (
+                    weapon
+                    for weapon in self._weapons
+                    if weapon.type in TARGET_GROUND
+                ),
+                None,
+            ):
                 return (weapon.damage * weapon.attacks) / weapon.speed
         return 0
 
@@ -251,8 +257,14 @@ class Unit:
         if self.type_id == UNIT_BATTLECRUISER:
             return 6
         if self.can_attack_ground:
-            weapon = next((weapon for weapon in self._weapons if weapon.type in TARGET_GROUND), None)
-            if weapon:
+            if weapon := next(
+                (
+                    weapon
+                    for weapon in self._weapons
+                    if weapon.type in TARGET_GROUND
+                ),
+                None,
+            ):
                 return weapon.range
         return 0
 
@@ -269,8 +281,10 @@ class Unit:
     def air_dps(self) -> float:
         """ Returns the dps against air units. Does not include upgrades. """
         if self.can_attack_air:
-            weapon = next((weapon for weapon in self._weapons if weapon.type in TARGET_AIR), None)
-            if weapon:
+            if weapon := next(
+                (weapon for weapon in self._weapons if weapon.type in TARGET_AIR),
+                None,
+            ):
                 return (weapon.damage * weapon.attacks) / weapon.speed
         return 0
 
@@ -280,8 +294,10 @@ class Unit:
         if self.type_id == UNIT_BATTLECRUISER:
             return 6
         if self.can_attack_air:
-            weapon = next((weapon for weapon in self._weapons if weapon.type in TARGET_AIR), None)
-            if weapon:
+            if weapon := next(
+                (weapon for weapon in self._weapons if weapon.type in TARGET_AIR),
+                None,
+            ):
                 return weapon.range
         return 0
 
@@ -345,10 +361,10 @@ class Unit:
             if self._bot_object.state.creep[(int(x), int(y))]:
                 speed *= SPEED_INCREASE_ON_CREEP_DICT.get(unit_type, 1)
 
-            # Off creep upgrades
             elif upgrades:
-                upgrade_id2: Optional[UpgradeId] = OFF_CREEP_SPEED_UPGRADE_DICT.get(unit_type, None)
-                if upgrade_id2:
+                if upgrade_id2 := OFF_CREEP_SPEED_UPGRADE_DICT.get(
+                    unit_type, None
+                ):
                     speed *= OFF_CREEP_SPEED_INCREASE_DICT[unit_type]
 
             # Ultralisk has passive ability "Frenzied" which makes it immune to speed altering buffs
@@ -428,9 +444,7 @@ class Unit:
         """Returns the percentage of combined shield + hp points the unit has.
         Also takes build progress into account."""
         max_ = (self._proto.shield_max + self._proto.health_max) * self.build_progress
-        if max_ == 0:
-            return 0
-        return (self._proto.shield + self._proto.health) / max_
+        return 0 if max_ == 0 else (self._proto.shield + self._proto.health) / max_
 
     @property
     def energy(self) -> float:
@@ -674,15 +688,9 @@ class Unit:
             weapon_damage = weapon_damage - enemy_shield_armor if target.shield else weapon_damage - enemy_armor
             return weapon_damage, 0.224, 6
 
-        # Fast return for bunkers, since they don't have a weapon similar to BCs
         if self.type_id == UnitTypeId.BUNKER:
             if self.is_enemy:
-                if self.is_active:
-                    # Expect fully loaded bunker with marines
-                    return (24, 0.854, 6)
-                return (0, 0, 0)
-            # TODO if bunker belongs to us, use passengers and upgrade level to calculate damage
-
+                return (24, 0.854, 6) if self.is_active else (0, 0, 0)
         required_target_type: Set[int] = (
             TARGET_BOTH
             if target.type_id == UnitTypeId.COLOSSUS else TARGET_GROUND if not target.is_flying else TARGET_AIR
@@ -825,9 +833,7 @@ class Unit:
         calc_tuple: Tuple[float, float,
                           float] = self.calculate_damage_vs_target(target, ignore_armor, include_overkill_damage)
         # TODO fix for real time? The result may have to be multiplied by 1.4 because of game_speed=normal
-        if calc_tuple[1] == 0:
-            return 0
-        return calc_tuple[0] / calc_tuple[1]
+        return 0 if calc_tuple[1] == 0 else calc_tuple[0] / calc_tuple[1]
 
     @property
     def facing(self) -> float:
@@ -1034,9 +1040,7 @@ class Unit:
         from the first order, returns None if the unit is idle"""
         if self.orders:
             target = self.orders[0].target
-            if isinstance(target, int):
-                return target
-            return Point2.from_proto(target)
+            return target if isinstance(target, int) else Point2.from_proto(target)
         return None
 
     @property
@@ -1215,9 +1219,7 @@ class Unit:
             unit.move(closest_allied_unit_because_cant_attack)
         else:
             unit.move(retreatPosition)"""
-        if self.can_attack:
-            return self._proto.weapon_cooldown
-        return -1
+        return self._proto.weapon_cooldown if self.can_attack else -1
 
     @property
     def weapon_ready(self) -> bool:

@@ -42,9 +42,7 @@ class MassReaperBot(BotAI):
             self.supply_left < 5 and self.townhalls and self.supply_used >= 14
             and self.can_afford(UnitTypeId.SUPPLYDEPOT) and self.already_pending(UnitTypeId.SUPPLYDEPOT) < 1
         ):
-            workers: Units = self.workers.gathering
-            # If workers were found
-            if workers:
+            if workers := self.workers.gathering:
                 worker: Unit = workers.furthest_to(workers.center)
                 location: Point2 = await self.find_placement(UnitTypeId.SUPPLYDEPOT, worker.position, placement_step=3)
                 # If a placement location was found
@@ -115,8 +113,7 @@ class MassReaperBot(BotAI):
                 for vg in vgs:
                     if await self.can_place_single(UnitTypeId.REFINERY,
                                                    vg.position) and self.can_afford(UnitTypeId.REFINERY):
-                        workers: Units = self.workers.gathering
-                        if workers:  # same condition as above
+                        if workers := self.workers.gathering:
                             worker: Unit = workers.closest_to(vg)
                             # Caution: the target for the refinery has to be the vespene geyser, not its position!
                             worker.build_gas(vg)
@@ -160,9 +157,9 @@ class MassReaperBot(BotAI):
             if r.health_percentage < 2 / 5 and enemy_threats_close:
                 retreat_points: Set[Point2] = self.neighbors8(r.position,
                                                               distance=2) | self.neighbors8(r.position, distance=4)
-                # Filter points that are pathable
-                retreat_points: Set[Point2] = {x for x in retreat_points if self.in_pathing_grid(x)}
-                if retreat_points:
+                if retreat_points := {
+                    x for x in retreat_points if self.in_pathing_grid(x)
+                }:
                     closest_enemy: Unit = enemy_threats_close.closest_to(r)
                     retreat_point: Unit = closest_enemy.position.furthest(retreat_points)
                     r.move(retreat_point)
@@ -210,9 +207,9 @@ class MassReaperBot(BotAI):
             if r.weapon_cooldown != 0 and enemy_threats_very_close:
                 retreat_points: Set[Point2] = self.neighbors8(r.position,
                                                               distance=2) | self.neighbors8(r.position, distance=4)
-                # Filter points that are pathable by a reaper
-                retreat_points: Set[Point2] = {x for x in retreat_points if self.in_pathing_grid(x)}
-                if retreat_points:
+                if retreat_points := {
+                    x for x in retreat_points if self.in_pathing_grid(x)
+                }:
                     closest_enemy: Unit = enemy_threats_very_close.closest_to(r)
                     retreat_point: Point2 = max(
                         retreat_points, key=lambda x: x.distance_to(closest_enemy) - x.distance_to(r)
@@ -220,9 +217,7 @@ class MassReaperBot(BotAI):
                     r.move(retreat_point)
                     continue  # Continue for loop, don't execute any of the following
 
-            # Move to nearest enemy ground unit/building because no enemy unit is closer than 5
-            all_enemy_ground_units: Units = self.enemy_units.not_flying
-            if all_enemy_ground_units:
+            if all_enemy_ground_units := self.enemy_units.not_flying:
                 closest_enemy: Unit = all_enemy_ground_units.closest_to(r)
                 r.move(closest_enemy)
                 continue  # Continue for loop, don't execute any of the following
@@ -234,15 +229,13 @@ class MassReaperBot(BotAI):
         if self.townhalls:
             for w in self.workers.idle:
                 th: Unit = self.townhalls.closest_to(w)
-                mfs: Units = self.mineral_field.closer_than(10, th)
-                if mfs:
+                if mfs := self.mineral_field.closer_than(10, th):
                     mf: Unit = mfs.closest_to(w)
                     w.gather(mf)
 
         # Manage orbital energy and drop mules
         for oc in self.townhalls(UnitTypeId.ORBITALCOMMAND).filter(lambda x: x.energy >= 50):
-            mfs: Units = self.mineral_field.closer_than(10, oc)
-            if mfs:
+            if mfs := self.mineral_field.closer_than(10, oc):
                 mf: Unit = max(mfs, key=lambda x: x.mineral_contents)
                 oc(AbilityId.CALLDOWNMULE_CALLDOWNMULE, mf)
 
@@ -262,7 +255,7 @@ class MassReaperBot(BotAI):
     def neighbors8(self, position, distance=1) -> Set[Point2]:
         p = position
         d = distance
-        return self.neighbors4(position, distance) | {
+        return self.neighbors4(p, d) | {
             Point2((p.x - d, p.y - d)),
             Point2((p.x - d, p.y + d)),
             Point2((p.x + d, p.y - d)),
@@ -321,9 +314,9 @@ class MassReaperBot(BotAI):
 
             if all(
                 [
-                    len(deficit_gas_buildings) == 0,
-                    len(surplusgas_buildings) == 0,
-                    len(surplus_townhalls) == 0 or deficit_townhalls == 0,
+                    not deficit_gas_buildings,
+                    not surplusgas_buildings,
+                    not surplus_townhalls or deficit_townhalls == 0,
                 ]
             ):
                 # Cancel early if there is nothing to balance

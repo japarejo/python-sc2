@@ -37,25 +37,21 @@ class Controller(Protocol):
         logger.info("Creating new game")
         logger.info(f"Map:     {game_map.name}")
         logger.info(f"Players: {', '.join(str(p) for p in players)}")
-        result = await self._execute(create_game=req)
-        return result
+        return await self._execute(create_game=req)
 
     async def request_available_maps(self):
         req = sc_pb.RequestAvailableMaps()
-        result = await self._execute(available_maps=req)
-        return result
+        return await self._execute(available_maps=req)
 
     async def request_save_map(self, download_path: str):
         """ Not working on linux. """
         req = sc_pb.RequestSaveMap(map_path=download_path)
-        result = await self._execute(save_map=req)
-        return result
+        return await self._execute(save_map=req)
 
     async def request_replay_info(self, replay_path: str):
         """ Not working on linux. """
         req = sc_pb.RequestReplayInfo(replay_path=replay_path, download_data=False)
-        result = await self._execute(replay_info=req)
-        return result
+        return await self._execute(replay_info=req)
 
     async def start_replay(self, replay_path: str, realtime: bool, observed_id: int = 0):
         ifopts = sc_pb.InterfaceOptions(

@@ -109,8 +109,9 @@ class WarpGateBot(BotAI):
         # Make stalkers attack either closest enemy unit or enemy spawn location
         if self.units(UnitTypeId.STALKER).amount > 3:
             for stalker in self.units(UnitTypeId.STALKER).ready.idle:
-                targets = (self.enemy_units | self.enemy_structures).filter(lambda unit: unit.can_be_attacked)
-                if targets:
+                if targets := (self.enemy_units | self.enemy_structures).filter(
+                    lambda unit: unit.can_be_attacked
+                ):
                     target = targets.closest_to(stalker)
                     stalker.attack(target)
                 else:
@@ -126,15 +127,15 @@ class WarpGateBot(BotAI):
             self.proxy_built = True
 
         # Chrono nexus if cybercore is not ready, else chrono cybercore
-        if not self.structures(UnitTypeId.CYBERNETICSCORE).ready:
-            if not nexus.has_buff(BuffId.CHRONOBOOSTENERGYCOST) and not nexus.is_idle:
-                if nexus.energy >= 50:
-                    nexus(AbilityId.EFFECT_CHRONOBOOSTENERGYCOST, nexus)
-        else:
+        if self.structures(UnitTypeId.CYBERNETICSCORE).ready:
             ccore = self.structures(UnitTypeId.CYBERNETICSCORE).ready.first
             if not ccore.has_buff(BuffId.CHRONOBOOSTENERGYCOST) and not ccore.is_idle:
                 if nexus.energy >= 50:
                     nexus(AbilityId.EFFECT_CHRONOBOOSTENERGYCOST, ccore)
+
+        elif not nexus.has_buff(BuffId.CHRONOBOOSTENERGYCOST) and not nexus.is_idle:
+            if nexus.energy >= 50:
+                nexus(AbilityId.EFFECT_CHRONOBOOSTENERGYCOST, nexus)
 
 
 def main():

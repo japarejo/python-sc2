@@ -895,7 +895,9 @@ def test_dicts():
     try:
         from sc2.dicts.unit_research_abilities import RESEARCH_INFO
     except:
-        logger.info(f"Import error: dict sc2/dicts/unit_research_abilities.py is missing!")
+        logger.info(
+            "Import error: dict sc2/dicts/unit_research_abilities.py is missing!"
+        )
 
     bot: BotAI = get_map_specific_bot(random.choice(MAPS))
 
@@ -958,18 +960,17 @@ def test_position_pointlike(x1, y1, x2, y2, x3, y3):
         if pos1 != pos2:
             assert pos1.unit_axes_towards(pos2) != Point2((0, 0))
 
-        if 0 < x3:
+        if x3 > 0:
             temp_pos = pos1.towards(pos2, x3)
             if x3 <= pos1.distance_to(pos2):
                 # Using "towards" function to go between pos1 and pos2
                 dist1 = pos1.distance_to(temp_pos) + pos2.distance_to(temp_pos)
                 dist2 = pos1.distance_to(pos2)
-                assert abs(dist1 - dist2) <= epsilon
             else:
                 # Using "towards" function to go past pos2
                 dist1 = pos1.distance_to(pos2) + pos2.distance_to(temp_pos)
                 dist2 = pos1.distance_to(temp_pos)
-                assert abs(dist1 - dist2) <= epsilon
+            assert abs(dist1 - dist2) <= epsilon
         elif x3 < 0:
             # Using "towards" function with a negative value
             temp_pos = pos1.towards(pos2, x3)
@@ -1015,7 +1016,7 @@ def test_position_point2(x1, y1, x2, y2):
 
     assert isinstance(pos1.distance_to(pos2), float)
     assert isinstance(pos1.distance_to_point2(pos2), float)
-    if 0 < x2:
+    if x2 > 0:
         assert pos1.random_on_distance(x2) != pos1
         assert pos1.towards_with_random_angle(pos2, x2) != pos1
     assert pos1.towards_with_random_angle(pos2) != pos1

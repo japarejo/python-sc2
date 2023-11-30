@@ -64,7 +64,7 @@ class TestBot(BotAI):
 
         # Exit bot
         if iteration > 100:
-            logger.info("Tests completed after {} seconds".format(round(self.time, 1)))
+            logger.info(f"Tests completed after {round(self.time, 1)} seconds")
             exit(0)
 
     async def clean_up_center(self):
@@ -154,15 +154,14 @@ class TestBot(BotAI):
                     await self._advance_steps(2)
 
                 # Research upgrade
-                assert upgrade_id in upgrade_types, f"Given upgrade is not in the list of upgrade types"
+                assert (
+                    upgrade_id in upgrade_types
+                ), "Given upgrade is not in the list of upgrade types"
                 assert self.structures(structure_type), f"Structure {structure_type} has not been spawned in time"
 
                 # Try to research the upgrade
                 while 1:
-                    upgrader_structures: Units = self.structures(structure_type)
-                    # Upgrade has been researched, break
-                    # Hi atira monkaBirthday
-                    if upgrader_structures:
+                    if upgrader_structures := self.structures(structure_type):
                         upgrader_structure: Unit = upgrader_structures.closest_to(map_center)
                         if upgrader_structure.is_idle:
                             # logger.info(f"Making {upgrader_structure} research upgrade {upgrade_id}")

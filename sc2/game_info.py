@@ -65,8 +65,12 @@ class Ramp:
     @cached_property
     def top_center(self) -> Point2:
         length = len(self.upper)
-        pos = Point2((sum(p.x for p in self.upper) / length, sum(p.y for p in self.upper) / length))
-        return pos
+        return Point2(
+            (
+                sum(p.x for p in self.upper) / length,
+                sum(p.y for p in self.upper) / length,
+            )
+        )
 
     @cached_property
     def lower(self) -> FrozenSet[Point2]:
@@ -84,8 +88,12 @@ class Ramp:
     @cached_property
     def bottom_center(self) -> Point2:
         length = len(self.lower)
-        pos = Point2((sum(p.x for p in self.lower) / length, sum(p.y for p in self.lower) / length))
-        return pos
+        return Point2(
+            (
+                sum(p.x for p in self.lower) / length,
+                sum(p.y for p in self.lower) / length,
+            )
+        )
 
     @cached_property
     def barracks_in_middle(self) -> Optional[Point2]:
@@ -134,9 +142,7 @@ class Ramp:
             depot_position = self.depot_in_middle
             if depot_position is None:
                 return frozenset()
-            # Offset from middle depot to corner depots is (2, 1)
-            intersects = center.circle_intersection(depot_position, 5**0.5)
-            return intersects
+            return center.circle_intersection(depot_position, 5**0.5)
         raise Exception("Not implemented. Trying to access a ramp that has a wrong amount of upper points.")
 
     @cached_property

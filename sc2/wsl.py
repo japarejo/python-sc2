@@ -17,7 +17,9 @@ def win_path_to_wsl_path(path):
 
 def wsl_path_to_win_path(path):
     """Convert a path like /mnt/c/foo to C:\\foo"""
-    return PureWindowsPath(re.sub("^/mnt/([a-z])", lambda m: m.group(1).upper() + ":", path))
+    return PureWindowsPath(
+        re.sub("^/mnt/([a-z])", lambda m: f"{m.group(1).upper()}:", path)
+    )
 
 
 def get_wsl_home():
@@ -114,4 +116,4 @@ def detect():
         logger.warning("This may result in SC2 staying on a black screen and not connecting to your bot.")
         logger.warning("Please see the python-sc2 README for WSL2 configuration instructions.")
 
-    return "WSL" + version
+    return f"WSL{version}"

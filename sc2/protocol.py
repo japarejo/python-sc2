@@ -79,8 +79,7 @@ class Protocol:
         return response
 
     async def ping(self):
-        result = await self._execute(ping=sc_pb.RequestPing())
-        return result
+        return await self._execute(ping=sc_pb.RequestPing())
 
     async def quit(self):
         with suppress(ConnectionAlreadyClosed, ConnectionResetError):

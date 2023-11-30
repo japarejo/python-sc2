@@ -355,7 +355,9 @@ class BotAIInternal(ABC):
         ), f"Given unit command is not a command, but instead of type {type(action)}"
         if subtract_cost:
             cost: Cost = self.game_data.calculate_ability_cost(action.ability)
-            if can_afford_check and not (self.minerals >= cost.minerals and self.vespene >= cost.vespene):
+            if can_afford_check and (
+                self.minerals < cost.minerals or self.vespene < cost.vespene
+            ):
                 # Dont do action if can't afford
                 return False
             self.minerals -= cost.minerals
@@ -404,8 +406,7 @@ class BotAIInternal(ABC):
             return None
         if prevent_double:
             actions = list(filter(self.prevent_double_actions, actions))
-        result = await self.client.actions(actions)
-        return result
+        return await self.client.actions(actions)
 
     @final
     @staticmethod
@@ -693,14 +694,7 @@ class BotAIInternal(ABC):
     @final
     async def _issue_building_events(self):
         for structure in self.structures:
-            if structure.tag not in self._structures_previous_map:
-                if structure.build_progress < 1:
-                    await self.on_building_construction_started(structure)
-                else:
-                    # Include starting townhall
-                    self._units_created[structure.type_id] += 1
-                    await self.on_building_construction_complete(structure)
-            elif structure.tag in self._structures_previous_map:
+            if structure.tag in self._structures_previous_map:
                 # Check if a structure took damage this frame and then trigger event
                 previous_frame_structure: Unit = self._structures_previous_map[structure.tag]
                 if (
@@ -719,6 +713,13 @@ class BotAIInternal(ABC):
                 if structure.build_progress == 1 and previous_frame_structure.build_progress < 1:
                     self._units_created[structure.type_id] += 1
                     await self.on_building_construction_complete(structure)
+
+            elif structure.build_progress < 1:
+                await self.on_building_construction_started(structure)
+            else:
+                # Include starting townhall
+                self._units_created[structure.type_id] += 1
+                await self.on_building_construction_complete(structure)
 
     @final
     async def _issue_vision_events(self):
@@ -868,8 +869,7 @@ class BotAIInternal(ABC):
         assert condensed_index < len(
             self._cached_pdist
         ), f"Condensed index is larger than amount of calculated distances: {condensed_index} < {len(self._cached_pdist)}, units that caused the assert error: {unit1} and {unit2}"
-        distance = self._pdist[condensed_index]
-        return distance
+        return self._pdist[condensed_index]
 
     @final
     def _distance_squared_unit_to_unit_method2(self, unit1: Unit, unit2: Unit) -> float:

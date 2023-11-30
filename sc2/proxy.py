@@ -191,7 +191,7 @@ class Proxy:
         while self.result is None:
             bot_alive = bot_process and bot_process.poll() is None
             sc2_alive = self.controller.running
-            if self.done or not (bot_alive and sc2_alive):
+            if self.done or not bot_alive or not sc2_alive:
                 logger.info(
                     f"Proxy({self.port}): {self.player.name} died, "
                     f"bot{(not bot_alive) * ' not'} alive, sc2{(not sc2_alive) * ' not'} alive"
