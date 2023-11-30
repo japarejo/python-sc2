@@ -48,9 +48,7 @@ CWD = {
 
 def platform_detect():
     pf = os.environ.get("SC2PF", platform.system())
-    if pf == "Linux":
-        return wsl.detect() or pf
-    return pf
+    return wsl.detect() or pf if pf == "Linux" else pf
 
 
 PF = platform_detect()
@@ -68,9 +66,7 @@ def get_user_sc2_install():
     if USERPATH[PF]:
         einfo = str(get_home() / Path(USERPATH[PF]))
         if os.path.isfile(einfo):
-            with open(einfo) as f:
-                content = f.read()
-            if content:
+            if content := Path(einfo).read_text():
                 base = re.search(r" = (.*)Versions", content).group(1)
                 if PF in {"WSL1", "WSL2"}:
                     base = str(wsl.win_path_to_wsl_path(base))

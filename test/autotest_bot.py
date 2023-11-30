@@ -70,7 +70,7 @@ class TestBot(BotAI):
 
         # Exit bot
         if iteration > 100:
-            logger.info("Tests completed after {} seconds".format(round(self.time, 1)))
+            logger.info(f"Tests completed after {round(self.time, 1)} seconds")
             exit(0)
 
     async def clean_up_center(self):
@@ -254,10 +254,6 @@ class TestBot(BotAI):
             for reaper in self.units(UnitTypeId.REAPER):
                 reaper(AbilityId.KD8CHARGE_KD8CHARGE, center)
 
-            # logger.info(f"Effects: {self.state.effects}")
-            for effect in self.state.effects:
-                # logger.info(f"Effect: {effect}")
-                pass
             # Cleanup
             await self._advance_steps(2)
             # Check if condition is met
@@ -373,11 +369,8 @@ class TestBot(BotAI):
 
             # Cheat money, need 10k/10k to morph 400 lings to 400 banes
             if not banes and not bane_cocoons:
-                if self.minerals < 10_000:
+                if self.minerals < 10_000 or self.vespene < 10_000:
                     await self.client.debug_all_resources()
-                elif self.vespene < 10_000:
-                    await self.client.debug_all_resources()
-
             # Spawn units
             if not bane_nests:
                 await self.client.debug_create_unit([[UnitTypeId.BANELINGNEST, 1, center, 1]])
@@ -448,8 +441,9 @@ class TestBot(BotAI):
         while 1:
             # Once depot is under construction: debug kill scv -> advance simulation: should now match the test case
             if self.structures(UnitTypeId.SUPPLYDEPOT).not_ready.amount == 1:
-                construction_scvs: Units = self.workers.filter(lambda worker: worker.is_constructing_scv)
-                if construction_scvs:
+                if construction_scvs := self.workers.filter(
+                    lambda worker: worker.is_constructing_scv
+                ):
                     await self.client.debug_kill_unit(construction_scvs)
                     await self._advance_steps(8)
                     await self._advance_steps(8)

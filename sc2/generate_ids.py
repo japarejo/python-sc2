@@ -30,9 +30,9 @@ class IdGenerator:
 
         self.HOME_DIR = str(Path.home())
         self.DATA_JSON = {
-            "Darwin": self.HOME_DIR + "/Library/Application Support/Blizzard/StarCraft II/stableid.json",
-            "Windows": self.HOME_DIR + "/Documents/StarCraft II/stableid.json",
-            "Linux": self.HOME_DIR + "/Documents/StarCraft II/stableid.json",
+            "Darwin": f"{self.HOME_DIR}/Library/Application Support/Blizzard/StarCraft II/stableid.json",
+            "Windows": f"{self.HOME_DIR}/Documents/StarCraft II/stableid.json",
+            "Linux": f"{self.HOME_DIR}/Documents/StarCraft II/stableid.json",
         }
 
         self.ENUM_TRANSLATE = {
@@ -54,7 +54,7 @@ class IdGenerator:
     @staticmethod
     def make_key(key):
         if key[0].isdigit():
-            key = "_" + key
+            key = f"_{key}"
         # In patch 5.0, the key has "@" character in it which is not possible with python enums
         return key.upper().replace(" ", "_").replace("@", "")
 
@@ -71,11 +71,11 @@ class IdGenerator:
             key = v["buttonname"]
             remapid = v.get("remapid")
 
-            if (not key) and (remapid is None):
-                assert v["buttonname"] == ""
-                continue
-
             if not key:
+                if remapid is None:
+                    assert v["buttonname"] == ""
+                    continue
+
                 if v["friendlyname"] != "":
                     key = v["friendlyname"]
                 else:
@@ -90,7 +90,7 @@ class IdGenerator:
                 key = v["friendlyname"].upper().replace(" ", "_")
 
             if key[0].isdigit():
-                key = "_" + key
+                key = f"_{key}"
 
             if key in abilities and v["index"] == 0:
                 logger.info(f"{key} has value 0 and id {v['id']}, overwriting {key}: {abilities[key]}")
@@ -103,14 +103,13 @@ class IdGenerator:
 
         abilities["SMART"] = 1
 
-        enums = {}
-        enums["Units"] = units
-        enums["Abilities"] = abilities
-        enums["Upgrades"] = upgrades
-        enums["Buffs"] = buffs
-        enums["Effects"] = effects
-
-        return enums
+        return {
+            "Units": units,
+            "Abilities": abilities,
+            "Upgrades": upgrades,
+            "Buffs": buffs,
+            "Effects": effects,
+        }
 
     def parse_simple(self, d, data):
         units = {}
@@ -147,11 +146,16 @@ class IdGenerator:
 
             code = [self.HEADER, "import enum", "\n", f"class {class_name}(enum.Enum):"]
 
-            for key, value in sorted(body.items(), key=lambda p: p[1]):
-                code.append(f"    {key} = {value}")
-
+            code.extend(
+                f"    {key} = {value}"
+                for key, value in sorted(body.items(), key=lambda p: p[1])
+            )
             # Add repr function to more easily dump enums to dict
-            code += ["\n", "    def __repr__(self):", '        return f"' + class_name + '.{self.name}"']
+            code += [
+                "\n",
+                "    def __repr__(self):",
+                f'        return f"{class_name}' + '.{self.name}"',
+            ]
 
             code += [
                 "\n",
@@ -179,21 +183,26 @@ class IdGenerator:
                 f.write(f'ID_VERSION_STRING = "{self.game_version}"\n')
 
     def update_ids_from_stableid_json(self):
-        if self.game_version is None or ID_VERSION_STRING is None or ID_VERSION_STRING != self.game_version:
-            if self.verbose and self.game_version is not None and ID_VERSION_STRING is not None:
-                logger.info(
-                    f"Game version is different (Old: {self.game_version}, new: {ID_VERSION_STRING}. Updating ids to match game version"
-                )
-            stable_id_path = Path(self.DATA_JSON[self.PF])
-            assert stable_id_path.is_file()
-            with stable_id_path.open(encoding="utf-8") as data_file:
-                data = json.loads(data_file.read())
-            self.generate_python_code(self.parse_data(data))
+        if (
+            self.game_version is not None
+            and ID_VERSION_STRING is not None
+            and ID_VERSION_STRING == self.game_version
+        ):
+            return
+        if self.verbose and self.game_version is not None and ID_VERSION_STRING is not None:
+            logger.info(
+                f"Game version is different (Old: {self.game_version}, new: {ID_VERSION_STRING}. Updating ids to match game version"
+            )
+        stable_id_path = Path(self.DATA_JSON[self.PF])
+        assert stable_id_path.is_file()
+        with stable_id_path.open(encoding="utf-8") as data_file:
+            data = json.loads(data_file.read())
+        self.generate_python_code(self.parse_data(data))
 
-            # Update game_data if this is a live game
-            if self.game_data is not None:
-                self.reimport_ids()
-                self.update_game_data()
+        # Update game_data if this is a live game
+        if self.game_data is not None:
+            self.reimport_ids()
+            self.update_game_data()
 
     @staticmethod
     def reimport_ids():
@@ -217,7 +226,7 @@ class IdGenerator:
     def update_game_data(self):
         """Re-generate the dicts from self.game_data.
         This should be done after the ids have been reimported."""
-        ids = set(a.value for a in AbilityId if a.value != 0)
+        ids = {a.value for a in AbilityId if a.value != 0}
         self.game_data.abilities = {
             a.ability_id: AbilityData(self.game_data, a)
             for a in self.game_data._proto.abilities if a.ability_id in ids

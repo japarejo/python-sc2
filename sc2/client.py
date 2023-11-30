@@ -139,9 +139,10 @@ class Client(Protocol):
                 result = await self._execute(observation=sc_pb.RequestObservation())
                 assert result.observation.player_result
 
-            player_id_to_result = {}
-            for pr in result.observation.player_result:
-                player_id_to_result[pr.player_id] = Result(pr.result)
+            player_id_to_result = {
+                pr.player_id: Result(pr.result)
+                for pr in result.observation.player_result
+            }
             self._game_result = player_id_to_result
 
         # if render_data is available, then RGB rendering was requested
@@ -217,9 +218,7 @@ class Client(Protocol):
             path = [query_pb.RequestQueryPathing(unit_tag=start.tag, end_pos=end.as_Point2D)]
         result = await self._execute(query=query_pb.RequestQuery(pathing=path))
         distance = float(result.query.pathing[0].distance)
-        if distance <= 0.0:
-            return None
-        return distance
+        return None if distance <= 0.0 else distance
 
     async def query_pathings(self, zipped_list: List[List[Union[Unit, Point2, Point3]]]) -> List[float]:
         """Usage: await self.query_pathings([[unit1, target2], [unit2, target2]])
@@ -654,9 +653,11 @@ class Client(Protocol):
             debug=sc_pb.RequestDebug(
                 debug=(
                     debug_pb.DebugCommand(
-                        unit_value=debug_pb.
-                        DebugSetUnitValue(unit_value=unit_value, value=float(value), unit_tag=unit_tag)
-                    ) for unit_tag in unit_tags
+                        unit_value=debug_pb.DebugSetUnitValue(
+                            unit_value=unit_value, value=value, unit_tag=unit_tag
+                        )
+                    )
+                    for unit_tag in unit_tags
                 )
             )
         )

@@ -12,9 +12,6 @@ class ThreebaseVoidrayBot(BotAI):
 
     # pylint: disable=R0912
     async def on_step(self, iteration):
-        target_base_count = 3
-        target_stargate_count = 3
-
         if iteration == 0:
             await self.chat_send("(glhf)")
 
@@ -41,9 +38,9 @@ class ThreebaseVoidrayBot(BotAI):
                 # Activate charge ability if the void ray just attacked
                 if vr.weapon_cooldown > 0:
                     vr(AbilityId.EFFECT_VOIDRAYPRISMATICALIGNMENT)
-                # Choose target and attack, filter out invisible targets
-                targets = (self.enemy_units | self.enemy_structures).filter(lambda unit: unit.can_be_attacked)
-                if targets:
+                if targets := (self.enemy_units | self.enemy_structures).filter(
+                    lambda unit: unit.can_be_attacked
+                ):
                     target = targets.closest_to(vr)
                     vr.attack(target)
                 else:
@@ -83,10 +80,8 @@ class ThreebaseVoidrayBot(BotAI):
                         and self.already_pending(UnitTypeId.CYBERNETICSCORE) == 0
                     ):
                         await self.build(UnitTypeId.CYBERNETICSCORE, near=pylon)
-            else:
-                # If we have no gateway, build gateway
-                if self.can_afford(UnitTypeId.GATEWAY) and self.already_pending(UnitTypeId.GATEWAY) == 0:
-                    await self.build(UnitTypeId.GATEWAY, near=pylon)
+            elif self.can_afford(UnitTypeId.GATEWAY) and self.already_pending(UnitTypeId.GATEWAY) == 0:
+                await self.build(UnitTypeId.GATEWAY, near=pylon)
 
         # Build gas near completed nexuses once we have a cybercore (does not need to be completed
         if self.structures(UnitTypeId.CYBERNETICSCORE):
@@ -107,6 +102,9 @@ class ThreebaseVoidrayBot(BotAI):
         # If we have less than 3  but at least 3 nexuses, build stargate
         if self.structures(UnitTypeId.PYLON).ready and self.structures(UnitTypeId.CYBERNETICSCORE).ready:
             pylon = self.structures(UnitTypeId.PYLON).ready.random
+            target_base_count = 3
+            target_stargate_count = 3
+
             if (
                 self.townhalls.ready.amount + self.already_pending(UnitTypeId.NEXUS) >= target_base_count
                 and self.structures(UnitTypeId.STARGATE).ready.amount + self.already_pending(UnitTypeId.STARGATE) <

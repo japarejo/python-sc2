@@ -51,19 +51,15 @@ class TestBot(BotAI):
         await self.client.debug_create_unit([[UnitTypeId.OBSERVER, 1, map_center, 1]])
         await self._advance_steps(10)
 
-        # Remove everything close to map center
-        enemy_units = self.enemy_units | self.enemy_structures
-        if enemy_units:
+        if enemy_units := self.enemy_units | self.enemy_structures:
             await self.client.debug_kill_unit(enemy_units)
             await self._advance_steps(10)
 
-        neutral_units = self.resources
-        if neutral_units:
+        if neutral_units := self.resources:
             await self.client.debug_kill_unit(neutral_units)
             await self._advance_steps(10)
 
-        my_units = self.units | self.structures
-        if my_units:
+        if my_units := self.units | self.structures:
             await self.client.debug_kill_unit(my_units)
             await self._advance_steps(10)
 

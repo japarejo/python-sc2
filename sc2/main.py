@@ -154,7 +154,7 @@ async def _play_game_ai(
         # In on_step various errors can occur - log properly
         try:
             await ai.on_step(iteration)
-        except (AttributeError, ) as e:
+        except AttributeError as e:
             logger.exception(f"Caught exception: {e}")
             raise
         except Exception as e:
@@ -455,8 +455,7 @@ async def _setup_replay(server, replay_path, realtime, observed_id):
 async def _host_replay(replay_path, ai, realtime, _portconfig, base_build, data_version, observed_id):
     async with SC2Process(fullscreen=False, base_build=base_build, data_hash=data_version) as server:
         client = await _setup_replay(server, replay_path, realtime, observed_id)
-        result = await _play_replay(client, ai, realtime)
-        return result
+        return await _play_replay(client, ai, realtime)
 
 
 def get_replay_version(replay_path: Union[str, Path]) -> Tuple[str, str]:
@@ -505,10 +504,17 @@ def run_replay(ai, replay_path, realtime=False, observed_id=0):
         replay_path
     ), f'Replay path has to be an absolute path, e.g. "C:/replays/my_replay.SC2Replay" but given path was "{replay_path}"'
     base_build, data_version = get_replay_version(replay_path)
-    result = asyncio.get_event_loop().run_until_complete(
-        _host_replay(replay_path, ai, realtime, portconfig, base_build, data_version, observed_id)
+    return asyncio.get_event_loop().run_until_complete(
+        _host_replay(
+            replay_path,
+            ai,
+            realtime,
+            portconfig,
+            base_build,
+            data_version,
+            observed_id,
+        )
     )
-    return result
 
 
 async def play_from_websocket(
@@ -601,7 +607,7 @@ def process_results(players: List[AbstractPlayer], async_results: List[Result]) 
     i = 0
     for player in players:
         if player.needs_sc2:
-            if sum(r == Result.Victory for r in async_results) <= 1:
+            if async_results.count(Result.Victory) <= 1:
                 result[player] = async_results[i]
             else:
                 result[player] = Result.Undecided

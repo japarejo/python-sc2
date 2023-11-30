@@ -59,9 +59,7 @@ class ExpiringDict(OrderedDict):
             # Each item is a list of [value, frame time]
             item = OrderedDict.__getitem__(self, key)
             if self.frame - item[1] < self.max_age:
-                if with_age:
-                    return item[0], item[1]
-                return item[0]
+                return (item[0], item[1]) if with_age else item[0]
             OrderedDict.__delitem__(self, key)
         raise KeyError(key)
 
@@ -74,9 +72,11 @@ class ExpiringDict(OrderedDict):
         """ Printable version of the dict instead of getting memory adress """
         print_list = []
         with self.lock:
-            for key, value in OrderedDict.items(self):
-                if self.frame - value[1] < self.max_age:
-                    print_list.append(f"{repr(key)}: {repr(value)}")
+            print_list.extend(
+                f"{repr(key)}: {repr(value)}"
+                for key, value in OrderedDict.items(self)
+                if self.frame - value[1] < self.max_age
+            )
         print_str = ", ".join(print_list)
         return f"ExpiringDict({print_str})"
 
@@ -93,10 +93,7 @@ class ExpiringDict(OrderedDict):
         """Override len method as key value pairs aren't instantly being deleted, but only on __get__(item).
         This function is slow because it has to check if each element is not expired yet."""
         with self.lock:
-            count = 0
-            for _ in self.values():
-                count += 1
-            return count
+            return sum(1 for _ in self.values())
 
     def pop(self, key, default=None, with_age=False):
         """ Return the item and remove it """
@@ -105,15 +102,11 @@ class ExpiringDict(OrderedDict):
                 item = OrderedDict.__getitem__(self, key)
                 if self.frame - item[1] < self.max_age:
                     del self[key]
-                    if with_age:
-                        return item[0], item[1]
-                    return item[0]
+                    return (item[0], item[1]) if with_age else item[0]
                 del self[key]
             if default is None:
                 raise KeyError(key)
-            if with_age:
-                return default, self.frame
-            return default
+            return (default, self.frame) if with_age else default
 
     def get(self, key, default=None, with_age=False):
         """ Return the value for key if key is in dict, else default """
@@ -121,14 +114,10 @@ class ExpiringDict(OrderedDict):
             if OrderedDict.__contains__(self, key):
                 item = OrderedDict.__getitem__(self, key)
                 if self.frame - item[1] < self.max_age:
-                    if with_age:
-                        return item[0], item[1]
-                    return item[0]
+                    return (item[0], item[1]) if with_age else item[0]
             if default is None:
                 raise KeyError(key)
-            if with_age:
-                return default, self.frame
-            return None
+            return (default, self.frame) if with_age else None
         return None
 
     def update(self, other_dict: dict):

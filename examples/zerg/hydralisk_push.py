@@ -35,9 +35,7 @@ class Hydralisk(BotAI):
             larvae.random.train(UnitTypeId.OVERLORD)
             return
 
-        # If hydra den is ready and idle, research upgrades
-        hydra_dens = self.structures(UnitTypeId.HYDRALISKDEN)
-        if hydra_dens:
+        if hydra_dens := self.structures(UnitTypeId.HYDRALISKDEN):
             for hydra_den in hydra_dens.ready.idle:
                 if self.already_pending_upgrade(UpgradeId.EVOLVEGROOVEDSPINES
                                                 ) == 0 and self.can_afford(UpgradeId.EVOLVEGROOVEDSPINES):
@@ -108,8 +106,7 @@ class Hydralisk(BotAI):
         # Saturate gas
         for a in self.gas_buildings:
             if a.assigned_harvesters < a.ideal_harvesters:
-                w: Units = self.workers.closer_than(10, a)
-                if w:
+                if w := self.workers.closer_than(10, a):
                     w.random.gather(a)
 
         # Build queen once the pool is done

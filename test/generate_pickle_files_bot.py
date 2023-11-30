@@ -41,15 +41,13 @@ class ExporterBot(BotAI):
         folder_path = os.path.dirname(__file__)
         subfolder_name = "pickle_data"
         file_name = f"{self.map_name}.xz"
-        file_path = os.path.join(folder_path, subfolder_name, file_name)
-        return file_path
+        return os.path.join(folder_path, subfolder_name, file_name)
 
     def get_combat_file_path(self) -> str:
         folder_path = os.path.dirname(__file__)
         subfolder_name = "combat_data"
         file_name = f"{self.map_name}.xz"
-        file_path = os.path.join(folder_path, subfolder_name, file_name)
-        return file_path
+        return os.path.join(folder_path, subfolder_name, file_name)
 
     async def store_data_to_file(self, file_path: str):
         # Grab all raw data from observation

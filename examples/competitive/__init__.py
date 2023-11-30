@@ -26,11 +26,7 @@ def run_ladder_game(bot):
     parser.add_argument("--RealTime", action="store_true", help="Real time flag")
     args, _unknown = parser.parse_known_args()
 
-    if args.LadderServer is None:
-        host = "127.0.0.1"
-    else:
-        host = args.LadderServer
-
+    host = "127.0.0.1" if args.LadderServer is None else args.LadderServer
     host_port = args.GamePort
     lan_port = args.StartPort
 

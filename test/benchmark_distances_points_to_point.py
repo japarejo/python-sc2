@@ -36,8 +36,7 @@ def distance_numpy_basic_2(ps, p1):
     flat_units = (item for sublist in ps for item in sublist)
     units_np = np.fromiter(flat_units, dtype=float, count=2 * len(ps)).reshape((-1, 2))
     point_np = np.fromiter(p1, dtype=float, count=2).reshape((-1, 2))
-    dist_2 = np.sum((units_np - point_np)**2, axis=1)
-    return dist_2
+    return np.sum((units_np - point_np)**2, axis=1)
 
 
 def distance_numpy_einsum(ps, p1):
@@ -46,15 +45,13 @@ def distance_numpy_einsum(ps, p1):
     units_np = np.fromiter(flat_units, dtype=float, count=2 * len(ps)).reshape((-1, 2))
     point_np = np.fromiter(p1, dtype=float, count=2).reshape((-1, 2))
     deltas = units_np - point_np
-    dist_2 = np.einsum("ij,ij->i", deltas, deltas)
-    return dist_2
+    return np.einsum("ij,ij->i", deltas, deltas)
 
 
 def distance_numpy_einsum_pre_converted(ps, p1):
     """ Distance calculation using numpy einstein sum """
     deltas = ps - p1
-    dist_2 = np.einsum("ij,ij->i", deltas, deltas)
-    return dist_2
+    return np.einsum("ij,ij->i", deltas, deltas)
 
 
 # @njit("float64[:](float64[:, :], float64[:, :])")
@@ -92,9 +89,7 @@ def distance_pure_python(ps, p1):
     distances = []
     x1 = p1[0]
     y1 = p1[1]
-    for x0, y0 in ps:
-        distance_squared = (x0 - x1)**2 + (y0 - y1)**2
-        distances.append(distance_squared)
+    distances.extend((x0 - x1)**2 + (y0 - y1)**2 for x0, y0 in ps)
     return distances
 
 

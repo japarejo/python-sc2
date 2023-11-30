@@ -57,16 +57,16 @@ class ZergRushBot(BotAI):
             gas_drones: Units = self.workers.filter(lambda w: w.is_carrying_vespene and len(w.orders) < 2)
             drone: Unit
             for drone in gas_drones:
-                minerals: Units = self.mineral_field.closer_than(10, hatch)
-                if minerals:
+                if minerals := self.mineral_field.closer_than(10, hatch):
                     mineral: Unit = minerals.closest_to(drone)
                     drone.gather(mineral, queue=True)
 
         # If we have 100 vespene, this will try to research zergling speed once the spawning pool is at 100% completion
         if self.already_pending_upgrade(UpgradeId.ZERGLINGMOVEMENTSPEED
                                         ) == 0 and self.can_afford(UpgradeId.ZERGLINGMOVEMENTSPEED):
-            spawning_pools_ready: Units = self.structures(UnitTypeId.SPAWNINGPOOL).ready
-            if spawning_pools_ready:
+            if spawning_pools_ready := self.structures(
+                UnitTypeId.SPAWNINGPOOL
+            ).ready:
                 self.research(UpgradeId.ZERGLINGMOVEMENTSPEED)
 
         # If we have less than 2 supply left and no overlord is in the queue: train an overlord

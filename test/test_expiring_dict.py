@@ -9,6 +9,7 @@ from sc2.expiring_dict import ExpiringDict
 
 def test_class():
 
+
     class State:
 
         def __init__(self):
@@ -60,16 +61,10 @@ def test_class():
         assert test.get(key, with_age=True)[0] == item
         assert test.get(key, with_age=True)[1] in {0, 1}
 
-    c = 0
-    for key in test.keys():
-        c += 1
-        pass
+    c = sum(1 for _ in test.keys())
     assert c == 4
 
-    c = 0
-    for value in test.values():
-        c += 1
-        pass
+    c = sum(1 for _ in test.values())
     assert c == 4
 
     # Update from another dict
@@ -87,10 +82,10 @@ def test_class():
 
     assert len(test) == 0
 
-    for key in test.keys():
+    for _ in test.keys():
         assert False
 
-    for value in test.values():
+    for _ in test.values():
         assert False
 
     for key, value in test.items():

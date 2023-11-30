@@ -80,11 +80,8 @@ class SC2Process:
         self._host = host or os.environ.get("SC2CLIENTHOST", "127.0.0.1")
         self._serverhost = os.environ.get("SC2SERVERHOST", self._host)
 
-        if port is None:
-            self._port = portpicker.pick_unused_port()
-        else:
-            self._port = port
-        self._used_portpicker = bool(port is None)
+        self._port = portpicker.pick_unused_port() if port is None else port
+        self._used_portpicker = port is None
         self._tmp_dir = tempfile.mkdtemp(prefix="SC2_")
         self._process: subprocess = None
         self._session = None
@@ -131,10 +128,14 @@ class SC2Process:
     def find_data_hash(self, target_sc2_version: str) -> Optional[str]:
         """ Returns the data hash from the matching version string. """
         version: dict
-        for version in self.versions:
-            if version["label"] == target_sc2_version:
-                return version["data-hash"]
-        return None
+        return next(
+            (
+                version["data-hash"]
+                for version in self.versions
+                if version["label"] == target_sc2_version
+            ),
+            None,
+        )
 
     def _launch(self):
         if self._base_build:

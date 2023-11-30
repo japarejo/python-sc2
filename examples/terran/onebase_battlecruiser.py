@@ -16,12 +16,10 @@ class BCRushBot(BotAI):
 
     def select_target(self) -> Tuple[Point2, bool]:
         """ Select an enemy target the units should attack. """
-        targets: Units = self.enemy_structures
-        if targets:
+        if targets := self.enemy_structures:
             return targets.random.position, True
 
-        targets: Units = self.enemy_units
-        if targets:
+        if targets := self.enemy_units:
             return targets.random.position, True
 
         if self.units and min((u.position.distance_to(self.enemy_start_locations[0]) for u in self.units)) < 5:

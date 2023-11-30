@@ -190,8 +190,7 @@ def get_unit_train_build_abilities(data):
         unit_type = UnitTypeId(entry["id"])
         current_unit_train_abilities = OrderedDict2()
         for ability_info in unit_abilities:
-            ability_id_value: int = ability_info.get("ability", 0)
-            if ability_id_value:
+            if ability_id_value := ability_info.get("ability", 0):
                 ability_id: AbilityId = AbilityId(ability_id_value)
                 # Ability is not a train ability
                 if ability_id not in ability_to_unittypeid_dict:
@@ -211,18 +210,21 @@ def get_unit_train_build_abilities(data):
                     }
                   ]
                 """
-                requirements: List[Dict[str, int]] = ability_info.get("requirements", [])
-                if requirements:
+                if requirements := ability_info.get("requirements", []):
                     # Assume train abilities only have one tech building requirement; thors requiring armory and techlab is seperatedly counted
                     assert (
                         len([req for req in requirements if req.get("building", 0)]) <= 1
                     ), f"Error: Building {unit_type} has more than one tech requirements with train ability {ability_id}"
                     # UnitTypeId 5 == Techlab
                     requires_techlab: bool = any(req for req in requirements if req.get("addon", 0) == 5)
-                    requires_tech_builing_id_value: int = next(
-                        (req["building"] for req in requirements if req.get("building", 0)), 0
-                    )
-                    if requires_tech_builing_id_value:
+                    if requires_tech_builing_id_value := next(
+                        (
+                            req["building"]
+                            for req in requirements
+                            if req.get("building", 0)
+                        ),
+                        0,
+                    ):
                         required_building = UnitTypeId(requires_tech_builing_id_value)
 
                 if ability_id in ability_requires_placement:
@@ -270,8 +272,11 @@ def get_upgrade_abilities(data):
         ability_id: AbilityId = AbilityId(entry["id"])
         researched_ability_id: UnitTypeId
 
-        upgrade_id_value: int = entry.get("target", {}).get("Research", {}).get("upgrade", 0)
-        if upgrade_id_value:
+        if (
+            upgrade_id_value := entry.get("target", {})
+            .get("Research", {})
+            .get("upgrade", 0)
+        ):
             upgrade_id: UpgradeId = UpgradeId(upgrade_id_value)
 
             ability_to_upgrade_dict[ability_id] = upgrade_id
@@ -302,8 +307,7 @@ def get_upgrade_abilities(data):
 
         current_unit_research_abilities = OrderedDict2()
         for ability_info in unit_abilities:
-            ability_id_value: int = ability_info.get("ability", 0)
-            if ability_id_value:
+            if ability_id_value := ability_info.get("ability", 0):
                 ability_id: AbilityId = AbilityId(ability_id_value)
                 # Upgrade is not a known upgrade ability
                 if ability_id not in ability_to_upgrade_dict:
@@ -311,17 +315,26 @@ def get_upgrade_abilities(data):
 
                 required_building = None
                 required_upgrade = None
-                requirements = ability_info.get("requirements", [])
-                if requirements:
-                    req_building_id_value = next(
-                        (req["building"] for req in requirements if req.get("building", 0)), None
-                    )
-                    if req_building_id_value:
+                if requirements := ability_info.get("requirements", []):
+                    if req_building_id_value := next(
+                        (
+                            req["building"]
+                            for req in requirements
+                            if req.get("building", 0)
+                        ),
+                        None,
+                    ):
                         req_building_id = UnitTypeId(req_building_id_value)
                         required_building = req_building_id
 
-                    req_upgrade_id_value = next((req["upgrade"] for req in requirements if req.get("upgrade", 0)), None)
-                    if req_upgrade_id_value:
+                    if req_upgrade_id_value := next(
+                        (
+                            req["upgrade"]
+                            for req in requirements
+                            if req.get("upgrade", 0)
+                        ),
+                        None,
+                    ):
                         req_upgrade_id = UpgradeId(req_upgrade_id_value)
                         required_upgrade = req_upgrade_id
 
@@ -380,8 +393,7 @@ def get_unit_abilities(data: dict):
         unit_type = UnitTypeId(entry["id"])
         current_collected_unit_abilities: Set[AbilityId] = OrderedSet2()
         for ability_info in entry_unit_abilities:
-            ability_id_value: int = ability_info.get("ability", 0)
-            if ability_id_value:
+            if ability_id_value := ability_info.get("ability", 0):
                 ability_id: AbilityId = AbilityId(ability_id_value)
                 current_collected_unit_abilities.add(ability_id)
 
@@ -417,8 +429,7 @@ def generate_unit_alias_dict(data: dict):
         assert (
             unit_type_value in game_data.units
         ), f"Unit {unit_type} not listed in game_data.units - perhaps pickled file {pickled_file_path} is outdated?"
-        unit_alias: int = game_data.units[unit_type_value]._proto.unit_alias
-        if unit_alias:
+        if unit_alias := game_data.units[unit_type_value]._proto.unit_alias:
             # Might be 0 if it has no alias
             unit_alias_unit_type_id = UnitTypeId(unit_alias)
             all_unit_aliases[unit_type] = unit_alias_unit_type_id
@@ -460,8 +471,9 @@ def generate_redirect_abilities_dict(data: dict):
             logger.info(f"Error with ability id value {ability_id_value}")
             continue
 
-        generic_redirect_ability_value: int = game_data.abilities[ability_id_value]._proto.remaps_to_ability_id
-        if generic_redirect_ability_value:
+        if generic_redirect_ability_value := game_data.abilities[
+            ability_id_value
+        ]._proto.remaps_to_ability_id:
             # Might be 0 if it has no redirect ability
             all_redirect_abilities[ability_id] = AbilityId(generic_redirect_ability_value)
 
